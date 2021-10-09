@@ -1,4 +1,4 @@
-APScheduler @ file:///home/conda/feedstock_root/build_artifacts/apscheduler_1632488494343/work
+APScheduler==3.8.0
 certifi==2021.5.30
 charset-normalizer==2.0.6
 idna==3.2
@@ -8,6 +8,5 @@ pandas==1.1.5
 python-dateutil==2.8.2
 pytz==2021.3
 requests==2.26.0
-six @ file:///home/conda/feedstock_root/build_artifacts/six_1620240208055/work
 tzlocal==2.1
 urllib3==1.26.7
