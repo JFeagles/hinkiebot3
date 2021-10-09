@@ -328,14 +328,7 @@ player_misc_api = 'http://data.nba.net/data/10s/prod/v1/2021/players.json'
 def get_player_data():
 
     print("Getting player data")
-    player_stats = requests.get(
-        player_stats_api.replace('\n', ''),
-        headers=headers_player_data
-    ).json()
-
-    columns = player_stats['resultSets'][0]['headers']
-    df_stats = pd.DataFrame(player_stats['resultSets'][0]['rowSet'], columns=columns)
-    df_stats = df_stats[['PLAYER_ID', 'MIN_RANK']]
+    df_stats = pd.read_csv('player_min_rank.csv')
 
     df_player_info = requests.get(player_misc_api).json()
     df_player_info = pd.DataFrame(df_player_info['league']['standard'])
