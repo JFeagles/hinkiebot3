@@ -1,5 +1,6 @@
 from lib import ch
 from nba import nbacommands
+import os
 
 nbaprefix = "&"
 nhlprefix = "#"
@@ -34,7 +35,7 @@ class HinkieBot(ch.RoomManager):
                     room.message(str(ret))
         except Exception as e:
             print(str(e))
-rooms = ["hinkiebottesterxd"]#,"acleenba","csnphilly","nbcsphilly","acmemed3"]
+rooms = ["hinkiebottesterxd" ,"acleenba","csnphilly","nbcsphilly","acmemed3"]
 bot_name = "HinkieBot"
-bot_pw = ""
+bot_pw = os.environ['BOT_PW']
 HinkieBot.easy_start(rooms, bot_name, bot_pw)
