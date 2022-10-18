@@ -7,7 +7,7 @@ import re
 pattern = re.compile('([^\s\w]|_)+')
 
 #Season Year
-SEASON_YEAR = "2021"
+SEASON_YEAR = "2022"
 
 #ScheduleStuff
 sched = BackgroundScheduler()
@@ -323,7 +323,7 @@ OpponentTeamID=0&Outcome=&PORound=0&PaceAdjust=N&PerMode=PerGame&Period=0&Player
 PlusMinus=N&Rank=N&Season=2021-22&SeasonSegment=&SeasonType=Pre+Season&ShotClockRange=&StarterBench=&TeamID=0&
 TwoWay=0&VsConference=&VsDivision=&Weight=
 '''
-player_misc_api = 'http://data.nba.net/data/10s/prod/v1/2021/players.json'
+player_misc_api = 'http://data.nba.net/data/10s/prod/v1/2022/players.json'
 
 def get_player_data():
 
