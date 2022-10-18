@@ -119,16 +119,28 @@ def getPlayerLiveStats(fName, lName):
         return "Player name not found"
 
     boxscore = game.getBoxScore(int(player["teamId"]))
-    active_players = boxscore["stats"]["activePlayers"]
-    for active_player in active_players:
-        if active_player["personId"] == player["PLAYER_ID"]:
+    if str(boxscore['game']['homeTeam']['teamId']) == player['teamId']:
+        team = boxscore['game']['homeTeam']
+        is_home = True
+    else:
+        team = boxscore['game']['awayTeam']
+        is_home = False
+    for team_player in team['players']:
+        if str(team_player["personId"]) == player["PLAYER_ID"]:
             ret = getPlayerSummary(player)
-            if boxscore["basicGameData"]["hTeam"]["teamId"] == player["teamId"]:
-                ret += 'vs {} , '.format(constants.id_to_team_name[int(boxscore["basicGameData"]["vTeam"]["teamId"])])
+            if is_home:
+                ret += 'vs {} , '.format(constants.id_to_team_name[int(boxscore["game"]["awayTeam"]["teamId"])])
             else:
-                ret += '@ {} , '.format(constants.id_to_team_name[int(boxscore["basicGameData"]["hTeam"]["teamId"])])
-            stats = active_player
-            live_stats = scoreboard.getStats(stats, constants.PLAYER_LIVESTATS, constants.PLAYER_LIVESTATS_ID)
+                ret += '@ {} , '.format(constants.id_to_team_name[int(boxscore["game"]["homeTeam"]["teamId"])])
+
+            team_player['statistics']['minutes'] = team_player[
+                'statistics'
+            ]['minutesCalculated'].replace("PT", "").replace("M", "")
+            live_stats = scoreboard.getStats(
+                team_player['statistics'],
+                constants.PLAYER_LIVESTATS,
+                constants.PLAYER_LIVESTATS_ID
+            )
             return ret + live_stats
 
     return getPlayerSummary(player) + " is inactive."

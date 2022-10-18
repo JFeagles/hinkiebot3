@@ -9,19 +9,38 @@ pattern = re.compile('([^\s\w]|_)+')
 #Season Year
 SEASON_YEAR = "2022"
 
+# Need to get this url from https://www.nba.com/schedule (MIGHT CHANGE WHEN THE SEASON CHANGES)
+NBA_SCHEDULE_URL = "https://cdn.nba.com/static/json/staticData/scheduleLeagueV2_11.json"
+
 #ScheduleStuff
 sched = BackgroundScheduler()
 sched.start()
 
 #Stats
 #(makes,attempts,statname)
-FG_STATS = ["fgm","fga","FG","tpm","tpa","3PT","ftm","fta","FT"]
+FG_STATS = [
+    "fieldGoalsMade", "fieldGoalsAttempted", "FG",
+    "threePointersMade", "threePointersAttempted", "3PT",
+    "freeThrowsMade", "freeThrowsAttempted", "FT"
+]
 
 #(stat,statname)
-TEAM_STATS = ["assists","AST","totReb","REB","blocks","BLK","steals","STL","turnovers","TO"]
+TEAM_STATS = [
+    "assists", "AST",
+    "reboundsTotal", "REB",
+    "blocks", "BLK",
+    "steals", "STL",
+    "turnovers", "TO"
+]
 PLAYER_LIVESTATS = [
-    "assists","AST","totReb","REB","blocks","BLK",
-    "steals","STL","turnovers","TO","plusMinus","+/-","pFouls","fouls","min","mins"
+    "assists", "AST",
+    "reboundsTotal", "REB",
+    "blocks", "BLK",
+    "steals", "STL",
+    "turnovers", "TO",
+    "plusMinusPoints", "+/-",
+    "foulsPersonal", "fouls",
+    "minutes", "mins"
 ]
 PLAYER_STATS = [
     "gamesPlayed","gp","ppg","ppg","apg","apg","rpg","rpg","bpg",

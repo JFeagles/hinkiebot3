@@ -5,8 +5,10 @@ import pytz
 import nba.constants as constants
 import calendar
 import nba.scoreboard as scoreboard
+import pandas as pd
 
 GAMES_URL = 'http://data.nba.net/data/10s/prod/v1/'
+BOXSCORE_URL = 'https://cdn.nba.com/static/json/liveData/boxscore/'
 
 """
 Returns game if team is playing rn
@@ -33,22 +35,12 @@ def isTeamPlaying(teamID):
 Returns the current gameID for that teamID
 """
 
-
 def getGame(teamID):
-    game = isTeamPlaying(teamID)
-    if game is not None:
-        return game
-    else:
-        #team not playing rn,need to get it from logs
-        url = "{}{}/teams/{}/schedule.json".format(
-            GAMES_URL, constants.SEASON_YEAR, constants.id_to_team_name[teamID].lower()
-        )
-        print(url)
-        response = requests.get(url)
-        data = response.json()
-        lastgame = data["league"]["lastStandardGamePlayedIndex"]
-        return data["league"]["standard"][lastgame]
+    df_sched = loadSched(teamID)
 
+    # Last game that has started
+    df_sched = df_sched[df_sched['gameStatus'] > constants.GAME_STATUS_BEFORE]
+    return df_sched.iloc[-1].to_dict()
 
 """
 Returns the Score of the current game for that teamID
@@ -58,34 +50,20 @@ Returns the Score of the current game for that teamID
 def getGameScore(teamID):
     print("score method")
     try:
-        game = getGame(teamID)
-        print(game)
+        game = getBoxScore(teamID)['game']
         ret = "{} {} @ {} {}".format(
-            constants.id_to_team_name[int(game["vTeam"]["teamId"])], game["vTeam"]["score"],
-            constants.id_to_team_name[int(game["hTeam"]["teamId"])], game["hTeam"]["score"]
+            constants.id_to_team_name[int(game["awayTeam"]["teamId"])], game["awayTeam"]["score"],
+            constants.id_to_team_name[int(game["homeTeam"]["teamId"])], game["homeTeam"]["score"]
         )
-        if game["statusNum"] == constants.GAME_STATUS_FINAL:
-            ret += str(', FINAL')
-        elif game["period"]["isHalftime"] is True:
-            ret += str(', HALF')
-        else:
-            ret = ret + ", " + game["clock"] + " "
-            period = game["period"]["current"]
-            if period <= 4:
-                ret += str(period) + "Q"
-            else:
-                ret += "OT"
-        if game["seasonStageId"] == 4:
-            ret += " (" + game["playoffs"]["seriesSummaryText"]+")"
+        ret += ", {}".format(game['gameStatusText'])
         return ret
-
     except Exception as e:
         print(str(e))
 
 
 def getBoxScore(teamID):
     gm = getGame(teamID)
-    url = '{}{}/{}_boxscore.json'.format(GAMES_URL, gm["startDateEastern"], gm["gameId"])
+    url = '{}boxscore_{}.json'.format(BOXSCORE_URL, gm["gameId"])
     print(url)
     response = requests.get(url)
     data = response.json()
@@ -95,16 +73,15 @@ def getBoxScore(teamID):
 def getTeamStats(teamID):
     print("team stats command")
     boxscore = getBoxScore(teamID)
-    stats = boxscore["stats"]
-    hTeamId = boxscore["basicGameData"]["hTeam"]["teamId"]
-    vTeamId = boxscore["basicGameData"]["vTeam"]["teamId"]
+    hTeamId = boxscore["game"]["homeTeam"]["teamId"]
+    vTeamId = boxscore["game"]["awayTeam"]["teamId"]
     ret = constants.id_to_team_name[int(teamID)]
     if int(hTeamId) == teamID:
         ret += " vs " + constants.id_to_team_name[int(vTeamId)] + ", "
-        stats = stats["hTeam"]["totals"]
+        stats = boxscore["game"]["homeTeam"]['statistics']
     else:
         ret += " @ " + constants.id_to_team_name[int(hTeamId)] + ", "
-        stats = stats["vTeam"]["totals"]
+        stats = boxscore["game"]["awayTeam"]['statistics']
 
     return ret + scoreboard.getStats(stats, constants.TEAM_STATS, constants.TEAM_STATS_ID)
 
@@ -133,11 +110,14 @@ Loads team schedule from data.nba.net
 
 
 def loadSched(teamID):
-    url = '{}{}/teams/{}/schedule.json'.format(
-        GAMES_URL, constants.SEASON_YEAR, str(constants.id_to_team_name[teamID].lower())
-    )
+    url = constants.NBA_SCHEDULE_URL
     response = requests.get(url)
-    return response.json()
+    schedule_data = response.json()
+    df = pd.json_normalize(schedule_data['leagueSchedule']['gameDates'], "games")[[
+        'gameId', 'gameStatus', "homeTeam.teamId", "homeTeam.score", 'awayTeam.teamId', "awayTeam.score", 'gameDateEst'
+    ]]
+    df = df[(df['homeTeam.teamId'] == teamID) | (df['awayTeam.teamId'] == teamID)]
+    return df
 
 
 """

@@ -52,8 +52,8 @@ player_commands = {
     "stats": player.getPlayerLiveStats,
     "s": player.getPlayerLiveStats,
     "profile": player.getProfile,
-    "tdalert": player.tripDubWatch,
-    "seasonstats": player.getPlayerStats
+    #"tdalert": player.tripDubWatch,
+    #"seasonstats": player.getPlayerStats
 }
 
 misc_commands = {"quote": getHinkieQuote, "info": getInfo, "commands": getInfo}
