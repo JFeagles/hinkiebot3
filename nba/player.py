@@ -126,7 +126,7 @@ def getPlayerLiveStats(fName, lName):
         team = boxscore['game']['awayTeam']
         is_home = False
     for team_player in team['players']:
-        if str(team_player["personId"]) == player["PLAYER_ID"]:
+        if str(team_player["personId"]) in [player["PLAYER_ID"],  player["personId"]]:
             ret = getPlayerSummary(player)
             if is_home:
                 ret += 'vs {} , '.format(constants.id_to_team_name[int(boxscore["game"]["awayTeam"]["teamId"])])
