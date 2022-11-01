@@ -2,6 +2,8 @@ import pytz
 import requests
 import pandas as pd
 from apscheduler.schedulers.background import BackgroundScheduler
+from pymongo import MongoClient
+import os
 
 import re
 pattern = re.compile('([^\s\w]|_)+')
@@ -342,53 +344,22 @@ OpponentTeamID=0&Outcome=&PORound=0&PaceAdjust=N&PerMode=PerGame&Period=0&Player
 PlusMinus=N&Rank=N&Season=2021-22&SeasonSegment=&SeasonType=Pre+Season&ShotClockRange=&StarterBench=&TeamID=0&
 TwoWay=0&VsConference=&VsDivision=&Weight=
 '''
-player_misc_api = 'http://data.nba.net/data/10s/prod/v1/2022/players.json'
+player_misc_api = 'http://data.nba.net/data/10s/prod/v2/2022/players.json'
+
+client = MongoClient(
+    f"mongodb+srv://hinkiebot:{os.environ['MONGO_PW']}@cluster0.cawpjlo.mongodb.net/?retryWrites=true&w=majority"
+)
 
 def get_player_data():
 
     print("Getting player data")
-    df_stats = pd.read_csv('player_min_rank.csv')
+    players_data = list(client.nba['players'].find({}, {"_id": 0}))
 
-    df_player_info = requests.get(player_misc_api).json()
-    df_player_info = pd.DataFrame(df_player_info['league']['standard'])
-    df_player_info = df_player_info[[
-        'personId', 'jersey', 'pos',
-        'heightFeet', 'heightInches', 'weightPounds',
-        'dateOfBirthUTC', 'firstName', 'lastName', 'teamId'
-    ]]
+    # Format nicknames
+    df_stats = pd.DataFrame(players_data)
+    df_stats = df_stats.explode('nicknames')
+    df_stats['nicknames'] = df_stats['nicknames'].fillna("")
 
-    df_stats['PLAYER_ID'] = df_stats['PLAYER_ID'].astype(str)
-    df_player_info['personId'] = df_player_info['personId'].astype(str)
-
-    df_stats = pd.merge(
-        left=df_stats,
-        right=df_player_info,
-        left_on='PLAYER_ID',
-        right_on='personId',
-        how='right'
-    )
-    df_stats['MIN_RANK'] = df_stats['MIN_RANK'].fillna(99999).astype(int)
-
-    # Full name
-    df_stats.loc[:, "fullName"] = df_stats['firstName'] + ' ' + df_stats['lastName']
-
-    # Lower just for comparison when searching
-    df_stats.loc[:, 'fullName_comp'] = df_stats['fullName'].apply(
-        lambda x: pattern.sub('', x).lower()
-    )
-    df_stats.loc[:, 'firstName_comp'] = df_stats['firstName'].apply(
-        lambda x: pattern.sub('', x).lower()
-    )
-    df_stats.loc[:, 'lastName_comp'] = df_stats['lastName'].apply(
-        lambda x: pattern.sub('', x).lower()
-    )
-
-    # Sixers priority
-    df_stats['flag_sixers'] = df_stats['teamId'].apply(lambda id_: 0 if id_ == teams_names['sixers'] else 1)
-    df_stats['teamId'] = df_stats['teamId'].astype(str)
-
-    df_stats = df_stats.sort_values(['flag_sixers', 'MIN_RANK'])
-    df_stats = df_stats.fillna("")
     return df_stats
 
 

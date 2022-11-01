@@ -38,6 +38,15 @@ def getPlayerID(fname, lname=""):
     if len(players) > 0:
         return players.iloc[0].to_dict()
 
+    # Try to check for the nicknames
+    players = df_stats[
+        (df_stats['nicknames'] == full_name.strip()) &
+        (df_stats['nicknames'] != "") &
+        (df_stats['bbref_url'] != "")
+    ]
+    if len(players) > 0:
+        return players.iloc[0].to_dict()
+
     # Exact name matching didnt work, try do match (check for possible typo)
     # Last name could be blank
     if lname == "":
