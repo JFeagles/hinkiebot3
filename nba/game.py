@@ -7,6 +7,7 @@ import calendar
 import nba.scoreboard as scoreboard
 import pandas as pd
 
+FORMAT =  "%Y-%m-%dT%H:%M:%SZ"
 GAMES_URL = 'http://data.nba.net/data/10s/prod/v1/'
 BOXSCORE_URL = 'https://cdn.nba.com/static/json/liveData/boxscore/'
 
@@ -114,9 +115,18 @@ def loadSched(teamID):
     response = requests.get(url)
     schedule_data = response.json()
     df = pd.json_normalize(schedule_data['leagueSchedule']['gameDates'], "games")[[
-        'gameId', 'gameStatus', "homeTeam.teamId", "homeTeam.score", 'awayTeam.teamId', "awayTeam.score", 'gameDateEst'
+        'gameId', 'gameStatus', "homeTeam.teamId", "homeTeam.score", 'awayTeam.teamId', "awayTeam.score",
+        'gameDateEst', 'gameDateTimeUTC'
     ]]
     df = df[(df['homeTeam.teamId'] == teamID) | (df['awayTeam.teamId'] == teamID)]
+
+    # NBA NOT UPDATING STATUS!!
+    df['gameDateTimeUTC'] = df['gameDateTimeUTC'].apply(lambda x: datetime.datetime.strptime(x, FORMAT))
+    df.loc[
+        (df['gameStatus'] == 1) & (df["gameDateTimeUTC"] < datetime.datetime.utcnow()),
+        "gameStatus"
+    ] = 2
+
     return df
 
 
