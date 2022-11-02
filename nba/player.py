@@ -142,6 +142,9 @@ def getPlayerLiveStats(fName, lName):
             else:
                 ret += '@ {} , '.format(constants.id_to_team_name[int(boxscore["game"]["homeTeam"]["teamId"])])
 
+            if team_player.get("status", "") == "INACTIVE":
+                return ret + f"{team_player.get('status', 'INACTIVE')}: {team_player.get('notPlayingDescription', '')}"
+
             team_player['statistics']['minutes'] = team_player[
                 'statistics'
             ]['minutesCalculated'].replace("PT", "").replace("M", "")
